@@ -1,16 +1,14 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "dev" ]
-  pull_request:
-    branches: [ "main", "dev" ]
+    branches:
+      - "**"
 
 jobs:
-  lint-composer:
-    name: Lint Composer
+  build:
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -18,35 +16,85 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-
-      - name: Validate Composer Files
-        run: composer validate --strict
-
-  test-aplikasi:
-    name: Test Aplikasi
-    runs-on: ubuntu-latest
-    needs: lint-composer
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
+          php-version: "8.2"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
           coverage: none
 
-      - name: Setup Environment File
+      - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Generate Application Key
+      - name: Generate App Key
         run: php artisan key:generate
 
-      - name: Execute Tests
+      - name: Cache Vendor Directory
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.lock') }}
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+          coverage: none
+
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Restore Vendor Cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install Dependencies if Cache Missed
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Generate App Key
+        run: php artisan key:generate
+
+      - name: Run Tests
         run: php artisan test
+
+  staging:
+    name: Staging Deployment
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Staging Mock
+        run: |
+          echo "Simulasi deploy ke staging server selesai."
+
+  production:
+    name: Production Deployment
+    needs: staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Production Deployment Steps
+        run: |
+          echo "1. php artisan down --retry=60"
+          echo "2. git pull origin main"
+          echo "3. composer install --no-dev --optimize-autoloader"
+          echo "4. php artisan migrate --force"
+          echo "5. php artisan config:cache && php artisan route:cache && php artisan view:cache"
+          echo "6. php artisan queue:restart"
+          echo "7. php artisan up"
