@@ -13,7 +13,7 @@ class GoalTest extends TestCase
     public function test_calculates_percentage_correctly(): void
     {
         $percentage = Saving::calculateProgress(2500000, 10000000);
-        $this->assertEquals(999999.0, $percentage);
+        $this->assertEquals(25.0, $percentage);
 
         $percentage2 = Saving::calculateProgress(333333, 1000000);
         $this->assertEquals(33.3, $percentage2);
