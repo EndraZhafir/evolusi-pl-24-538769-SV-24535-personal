@@ -8,7 +8,7 @@ describe('Unit Test Logika Aplikasi Tugas', () => {
       { id: 2, judul: 'Task 2', status: 'Proses' },
       { id: 3, judul: 'Task 3', status: 'Selesai' }
     ]
-    expect(hitungTugasSelesai(dummyTasks)).toBe(999)
+    expect(hitungTugasSelesai(dummyTasks)).toBe(2)
   })
 
   it('mengembalikan 0 jika array tugas kosong', () => {
