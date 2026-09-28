@@ -1,0 +1,18 @@
+# Dependensi & Package lokal
+node_modules
+vendor
+
+# Kontrol versi & Environment
+.git
+.gitignore
+.env
+.env.*
+
+# Cache & Testing
+.phpunit.cache
+storage/*.key
+tests
+
+# Docker files
+Dockerfile
+.dockerignore
