@@ -1,5 +1,6 @@
-# Dependensi & Package lokal
+# Dependensi & Package lokal (wajib di-build di dalam container)
 node_modules
+*/node_modules
 vendor
 
 # Kontrol versi & Environment
@@ -10,9 +11,11 @@ vendor
 
 # Cache & Testing
 .phpunit.cache
+.phpunit.result.cache
 storage/*.key
 tests
 
-# Docker files
+# Docker files & Dokumentasi
 Dockerfile
 .dockerignore
+*.md
